@@ -1,12 +1,17 @@
+use awc::error::{JsonPayloadError, SendRequestError};
+
 /// Error type
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// Invalid URL
     #[error("invalid url")]
     InvalidUrl,
-    /// RpcError wrapping reqwest::Error
+    /// RpcError wrapping awc::error::SendRequestError
     #[error("rpc error {0}")]
-    RpcError(#[from] reqwest::Error),
+    RpcError(#[from] SendRequestError),
+    /// JsonError wrapping awc::error::JsonPayloadError
+    #[error("rpc error {0}")]
+    JsonError(#[from] JsonPayloadError),
     /// API call failed
     #[error("api error {0}")]
     ApiError(String),

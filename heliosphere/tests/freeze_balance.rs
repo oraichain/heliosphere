@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use heliosphere::{ResourceType, RpcClient};
 use heliosphere_core::Address;
 use heliosphere_signer::{keypair::Keypair, signer::Signer};
@@ -6,7 +8,7 @@ use heliosphere_signer::{keypair::Keypair, signer::Signer};
 async fn test_freeze_balance() {
     let api = "https://api.shasta.trongrid.io";
     let keypair = Keypair::from_hex_key(option_env!("PRIV_KEY").unwrap()).unwrap();
-    let client = RpcClient::new(api).unwrap();
+    let client = RpcClient::new(api, Duration::from_secs(120)).unwrap();
     let from = keypair.address();
     let to: Address = "TB9n2jzcWoqta1xX2Mv8P3y9tyUNsGTFsQ".parse().unwrap();
     let amount = 1_000_000;

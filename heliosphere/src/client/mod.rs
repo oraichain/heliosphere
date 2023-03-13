@@ -8,7 +8,9 @@ use heliosphere_core::{
     transaction::{Transaction, TransactionId},
     Address,
 };
-use reqwest::{Client, IntoUrl, Url};
+// use reqwest::{Client, IntoUrl, Url};
+use awc::http::header;
+use awc::Client;
 use serde::{de::DeserializeOwned, Serialize};
 
 use self::types::{
@@ -35,19 +37,21 @@ pub struct MethodCall<'a> {
 pub struct RpcClientBuilder {
     client: Option<Client>,
     poll_interval: Duration,
-    rpc_url: Url,
+    rpc_url: String,
+    timeout: Duration,
 }
 
 impl RpcClientBuilder {
     /// Create new instance
-    pub fn new<U>(rpc_url: U) -> Result<Self, crate::Error>
+    pub fn new<U>(rpc_url: U, timeout: Duration) -> Result<Self, crate::Error>
     where
-        U: IntoUrl,
+        U: ToString,
     {
         Ok(Self {
             client: None,
+            timeout,
             poll_interval: Duration::from_secs(5),
-            rpc_url: rpc_url.into_url().map_err(|_| crate::Error::InvalidUrl)?,
+            rpc_url: rpc_url.to_string(),
         })
     }
 
@@ -69,6 +73,7 @@ impl RpcClientBuilder {
             rpc_url: self.rpc_url,
             client: self.client.unwrap_or_default(),
             poll_interval: self.poll_interval,
+            timeout: self.timeout,
             headers: HashMap::new(),
         }
     }
@@ -77,19 +82,25 @@ impl RpcClientBuilder {
 /// RpcClient for creating and broadcasting transaction or interaction with smart contracts
 #[derive(Clone)]
 pub struct RpcClient {
-    rpc_url: Url,
+    rpc_url: String,
     client: Client,
     poll_interval: Duration,
+    timeout: Duration,
     headers: HashMap<String, String>,
 }
 
 impl RpcClient {
     /// Create new RpcClient with default params
-    pub fn new<U>(rpc_url: U) -> Result<Self, crate::Error>
+    pub fn new<U>(rpc_url: U, timeout: Duration) -> Result<Self, crate::Error>
     where
-        U: IntoUrl,
+        U: ToString,
     {
-        Ok(RpcClientBuilder::new(rpc_url)?.build())
+        Ok(RpcClientBuilder::new(rpc_url, timeout)?.build())
+    }
+
+    /// return timeout
+    pub fn get_timeout(&self) -> Duration {
+        self.timeout
     }
 
     /// set a custom header
@@ -103,11 +114,17 @@ impl RpcClient {
         P: Serialize,
         R: DeserializeOwned,
     {
-        let mut request = self.client.post(&format!("{}/{}", self.rpc_url, method));
+        let mut request = self
+            .client
+            .post(&format!("{}{}", self.rpc_url, method))
+            .timeout(self.timeout)
+            .append_header((header::CONTENT_TYPE, "application/json"));
+
         for (key, value) in &self.headers {
-            request = request.header(key.clone(), value.clone());
+            request = request.insert_header((key.clone(), value.clone()));
         }
-        Ok(request.json(payload).send().await?.json().await?)
+
+        Ok(request.send_json(payload).await?.json().await?)
     }
 
     /// Send a GET request
@@ -115,10 +132,16 @@ impl RpcClient {
     where
         R: DeserializeOwned,
     {
-        let mut request = self.client.get(&format!("{}/{}", self.rpc_url, method));
+        let mut request = self
+            .client
+            .get(&format!("{}{}", self.rpc_url, method))
+            .timeout(self.timeout)
+            .append_header((header::CONTENT_TYPE, "application/json"));
+
         for (key, value) in &self.headers {
-            request = request.header(key.clone(), value.clone());
+            request = request.insert_header((key.clone(), value.clone()));
         }
+
         Ok(request.send().await?.json().await?)
     }
 
@@ -400,6 +423,7 @@ impl RpcClient {
                 &serde_json::json!({ "address": account.as_hex() }),
             )
             .await?;
+
         resp.balance.ok_or(crate::Error::AccountNotFound)
     }
 
