@@ -29,7 +29,7 @@ Rust-idiomatic Tron API client library.
 ```rust
 let api = "https://api.shasta.trongrid.io";
 let keypair = Keypair::from_hex_key(option_env!("PRIV_KEY").unwrap()).unwrap();
-let client = RpcClient::new(api).unwrap();
+let mut client = RpcClient::new(api).unwrap();
 client.set_header("TRON-PRO-API-KEY", option_env!("API_KEY").unwrap());
 let from = keypair.address();
 let to: Address = "<transfer-to-address>".parse().unwrap();
