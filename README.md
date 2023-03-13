@@ -6,35 +6,31 @@ Rust-idiomatic Tron API client library.
 
 ## Supported features
 
-| Features | Support |
-|----------|---------|
-| Transaction signing & broadcasting | &check; |
-| Smart contract calls | &check; |
-| Basic network querying | &check; |
-| Staking TRX for energy and bandwidth | &check; |
-| Offline transaction signing | &check; |
+| Features                                                     | Support |
+| ------------------------------------------------------------ | ------- |
+| Transaction signing & broadcasting                           | &check; |
+| Smart contract calls                                         | &check; |
+| Basic network querying                                       | &check; |
+| Staking TRX for energy and bandwidth                         | &check; |
+| Offline transaction signing                                  | &check; |
 | Offline transaction encoding (without CreateTransaction API) | &cross; |
-| Voting & Proposals | &cross; |
+| Voting & Proposals                                           | &cross; |
 
 ## Structure
 
-| Crate         | Description     |
-|--------------|------------------|
-| [heliosphere](https://crates.io/crates/heliosphere) | Main crate |
-| [heliosphere-core](https://crates.io/crates/heliosphere-core) | Core types, no_std compatible but alloc required |
+| Crate                                                             | Description                                                     |
+| ----------------------------------------------------------------- | --------------------------------------------------------------- |
+| [heliosphere](https://crates.io/crates/heliosphere)               | Main crate                                                      |
+| [heliosphere-core](https://crates.io/crates/heliosphere-core)     | Core types, no_std compatible but alloc required                |
 | [heliosphere-signer](https://crates.io/crates/heliosphere-signer) | Transaction signing utils, no_std compatible but alloc required |
 
 ## TRC20 transfer example
 
-```
+```rust
 let api = "https://api.shasta.trongrid.io";
-let keypair = Keypair::from_hex_key(
-    std::fs::read_to_string(".key")
-        .expect("no ./.key found")
-        .trim(),
-)
-.unwrap();
+let keypair = Keypair::from_hex_key(option_env!("PRIV_KEY").unwrap()).unwrap();
 let client = RpcClient::new(api).unwrap();
+client.set_header("TRON-PRO-API-KEY", option_env!("API_KEY").unwrap());
 let from = keypair.address();
 let to: Address = "<transfer-to-address>".parse().unwrap();
 let usdt: Address = "TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs".parse().unwrap(); // shasta testnet USDT
@@ -89,4 +85,4 @@ client.await_confirmation(txid).await.unwrap();
 
 This project is licensed under the [MIT license].
 
-[MIT license]: https://github.com/tokio-rs/tokio/blob/master/LICENSE
+[mit license]: https://github.com/tokio-rs/tokio/blob/master/LICENSE

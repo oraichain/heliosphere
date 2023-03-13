@@ -5,12 +5,7 @@ use heliosphere_signer::{keypair::Keypair, signer::Signer};
 #[tokio::test]
 async fn test_freeze_balance() {
     let api = "https://api.shasta.trongrid.io";
-    let keypair = Keypair::from_hex_key(
-        std::fs::read_to_string(".key")
-            .expect("no ./.key found")
-            .trim(),
-    )
-    .unwrap();
+    let keypair = Keypair::from_hex_key(option_env!("PRIV_KEY").unwrap()).unwrap();
     let client = RpcClient::new(api).unwrap();
     let from = keypair.address();
     let to: Address = "TB9n2jzcWoqta1xX2Mv8P3y9tyUNsGTFsQ".parse().unwrap();

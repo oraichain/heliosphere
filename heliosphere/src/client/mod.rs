@@ -1,4 +1,7 @@
-use std::{collections::BTreeMap, time::Duration};
+use std::{
+    collections::{BTreeMap, HashMap},
+    time::Duration,
+};
 
 use heliosphere_core::{
     block::{Block, BlockBy, BlockHeader},
@@ -66,6 +69,7 @@ impl RpcClientBuilder {
             rpc_url: self.rpc_url,
             client: self.client.unwrap_or_default(),
             poll_interval: self.poll_interval,
+            headers: HashMap::new(),
         }
     }
 }
@@ -76,6 +80,7 @@ pub struct RpcClient {
     rpc_url: Url,
     client: Client,
     poll_interval: Duration,
+    headers: HashMap<String, String>,
 }
 
 impl RpcClient {
@@ -87,20 +92,22 @@ impl RpcClient {
         Ok(RpcClientBuilder::new(rpc_url)?.build())
     }
 
+    /// set a custom header
+    pub fn set_header(&mut self, key: &str, value: &str) {
+        self.headers.insert(key.to_string(), value.to_string());
+    }
+
     /// Send a POST request with json-serializable payload
     pub async fn api_post<P, R>(&self, method: &str, payload: &P) -> Result<R, crate::Error>
     where
         P: Serialize,
         R: DeserializeOwned,
     {
-        Ok(self
-            .client
-            .post(&format!("{}/{}", self.rpc_url, method))
-            .json(payload)
-            .send()
-            .await?
-            .json()
-            .await?)
+        let mut request = self.client.post(&format!("{}/{}", self.rpc_url, method));
+        for (key, value) in &self.headers {
+            request = request.header(key.clone(), value.clone());
+        }
+        Ok(request.json(payload).send().await?.json().await?)
     }
 
     /// Send a GET request
@@ -108,13 +115,11 @@ impl RpcClient {
     where
         R: DeserializeOwned,
     {
-        Ok(self
-            .client
-            .get(&format!("{}/{}", self.rpc_url, method))
-            .send()
-            .await?
-            .json()
-            .await?)
+        let mut request = self.client.get(&format!("{}/{}", self.rpc_url, method));
+        for (key, value) in &self.headers {
+            request = request.header(key.clone(), value.clone());
+        }
+        Ok(request.send().await?.json().await?)
     }
 
     /// Broadcast signed transaction
