@@ -22,6 +22,12 @@ impl Keypair {
         }
     }
 
+    /// Init from bytes private key
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, SignerError> {
+        let signing_key = SigningKey::from_bytes(bytes).map_err(|_| SignerError::InvalidKey)?;
+        Ok(Self::from_signing_key(signing_key))
+    }
+
     /// Generate new keypair
     pub fn generate(rng: impl CryptoRng + RngCore) -> Self {
         let signing_key = SigningKey::random(rng);
@@ -31,8 +37,7 @@ impl Keypair {
     /// Init from hex private key
     pub fn from_hex_key(key: &str) -> Result<Self, SignerError> {
         let bytes = hex::decode(key).map_err(|_| SignerError::KeyDecodeError)?;
-        let signing_key = SigningKey::from_bytes(&bytes).map_err(|_| SignerError::InvalidKey)?;
-        Ok(Self::from_signing_key(signing_key))
+        Self::from_bytes(&bytes)
     }
 
     /// Get public (verifying) key
