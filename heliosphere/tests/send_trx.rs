@@ -18,7 +18,10 @@ async fn test_send_trx() {
     let txid = client.broadcast_transaction(&tx).await.unwrap();
     println!("Txid: {}", txid);
     println!("Confirming...");
-    let info = client.await_confirmation(txid).await.unwrap();
+    let info = client
+        .await_confirmation(txid, Duration::from_secs(60))
+        .await
+        .unwrap();
     println!("{:?}", info);
     let new_balance = client.get_account_balance(&from).await.unwrap();
     assert!(old_balance >= new_balance + amount); // including TRX burn

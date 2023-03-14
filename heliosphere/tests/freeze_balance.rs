@@ -29,6 +29,9 @@ async fn test_freeze_balance() {
     let txid = client.broadcast_transaction(&tx).await.unwrap();
     println!("{}", txid);
     println!("Confirming...");
-    let info = client.await_confirmation(txid).await.unwrap();
+    let info = client
+        .await_confirmation(txid, Duration::from_secs(60))
+        .await
+        .unwrap();
     println!("{:?}", info);
 }

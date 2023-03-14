@@ -1,6 +1,6 @@
 use std::{
     collections::{BTreeMap, HashMap},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use heliosphere_core::{
@@ -208,7 +208,9 @@ impl RpcClient {
     pub async fn await_confirmation(
         &self,
         txid: TransactionId,
+        timeout: Duration,
     ) -> Result<TransactionInfo, crate::Error> {
+        let start = Instant::now();
         loop {
             let info = self.get_tx_info_by_id(txid).await?;
             match info {
@@ -224,6 +226,9 @@ impl RpcClient {
                 _ => {
                     tokio::time::sleep(self.poll_interval).await;
                 }
+            }
+            if Instant::now() - start > timeout {
+                return Err(crate::Error::TxTimeout);
             }
         }
     }

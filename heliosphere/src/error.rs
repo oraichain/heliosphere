@@ -21,6 +21,9 @@ pub enum Error {
     /// Transaction failed on chain
     #[error("tx failed {0}")]
     TxFailed(String),
+    /// Transaction timeout
+    #[error("transaction timeout")]
+    TxTimeout,
     /// Returned when contract query fails
     #[error("contract query failed {0} {1}")]
     ContractQueryFailed(String, String),

@@ -56,7 +56,10 @@ async fn test_send_token() {
     let txid = client.broadcast_transaction(&tx).await.unwrap();
     println!("Txid: {}", txid);
     println!("Confirming...");
-    client.await_confirmation(txid).await.unwrap();
+    client
+        .await_confirmation(txid, Duration::from_secs(60))
+        .await
+        .unwrap();
 
     // Fetch account balance after
     let res = &ethabi::decode(
