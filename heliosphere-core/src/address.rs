@@ -97,6 +97,21 @@ impl From<Address> for ethabi::Address {
     }
 }
 
+/// Implement for clarity
+impl From<clarity::Address> for Address {
+    fn from(value: clarity::Address) -> Self {
+        let mut addr = [0x41; 21];
+        addr[1..].copy_from_slice(value.as_bytes());
+        Self::new(addr).unwrap()
+    }
+}
+
+impl From<Address> for clarity::Address {
+    fn from(value: Address) -> Self {
+        Self::from_slice(&value.0[1..]).unwrap()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
