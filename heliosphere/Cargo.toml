@@ -11,8 +11,8 @@ categories = ["api-bindings"]
 repository = "https://github.com/3A-Technologies/heliosphere"
 
 [dependencies]
-heliosphere-core = "0.2.0"
-heliosphere-signer = "0.2.0"
+heliosphere-core = {path = "../heliosphere-core"}
+heliosphere-signer = {path = "../heliosphere-signer"}
 hex = "0.4.3"
 awc = {version = "3.1.1", default-features = false, features=["openssl", "compress-gzip", "compress-zstd"]}
 serde = { version = "1.0.152", features = ["derive"] }
