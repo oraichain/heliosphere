@@ -113,6 +113,11 @@ impl RpcClient {
         self.headers.get(key).cloned().unwrap_or_default()
     }
 
+    /// return all header keys
+    pub fn header_keys(&self) -> Vec<String> {
+        self.headers.keys().map(|k| k.clone()).collect()
+    }
+
     /// Send a POST request with json-serializable payload
     pub async fn api_post<P, R>(&self, method: &str, payload: &P) -> Result<R, crate::Error>
     where
