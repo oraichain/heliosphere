@@ -189,14 +189,16 @@ impl RpcClient {
 
     /// Get only block header
     pub async fn get_block_header(&self, by: BlockBy) -> Result<BlockHeader, crate::Error> {
-        self.api_post(
-            "/wallet/getblock",
-            &serde_json::json!({
-                "id_or_num": by.id_or_num(),
-                "detail": false,
-            }),
-        )
-        .await
+        let block: Block = self
+            .api_post(
+                "/wallet/getblock",
+                &serde_json::json!({
+                    "id_or_num": by.id_or_num(),
+                    "detail": false,
+                }),
+            )
+            .await?;
+        Ok(block.block_header)
     }
 
     /// Get transaction info
@@ -464,18 +466,20 @@ impl RpcClient {
     ) -> Result<Vec<EventData>, crate::Error> {
         let method_name = &selector[..selector.find('(').unwrap_or(selector.len())];
 
+        let block_header = self.get_block_header(BlockBy::Number(start_block)).await?;
+
         let mut url = format!(
-            "/v1/contracts/{}/events?block_number={}&event_name={}&only_confirmed=true",
-            start_block,
+            "/v1/contracts/{}/events?event_name={}&only_confirmed=true&min_block_timestamp={}",
             contract_address.as_base58(),
             method_name,
+            block_header.raw_data.timestamp
         );
 
         if let Some(end_block) = end_block {
-            let block = self.get_block(BlockBy::Number(end_block)).await?;
+            let block_header = self.get_block_header(BlockBy::Number(end_block)).await?;
             url = format!(
                 "{}&max_block_timestamp={}",
-                url, block.block_header.raw_data.timestamp
+                url, block_header.raw_data.timestamp
             );
         }
 

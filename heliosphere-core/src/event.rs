@@ -23,15 +23,17 @@ pub struct EventData {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct EventMeta {
     pub at: u64,
-    pub page_size: u8,
+    pub page_size: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct EventsResult {
+    #[serde(default)]
     pub data: Vec<EventData>,
     pub success: bool,
+    pub meta: Option<EventMeta>,
     pub error: Option<String>,
     #[serde(rename(deserialize = "statusCode"))]
-    pub status_code: Option<u8>,
-    pub meta: EventMeta,
+    #[serde(default)]
+    pub status_code: u64, // default is 0
 }
