@@ -5,7 +5,9 @@ use std::{
 
 use heliosphere_core::{
     block::{Block, BlockBy, BlockHeader},
+    event::{EventData, EventsResult},
     transaction::{Transaction, TransactionId},
+    util::extract_sig_from_event,
     Address,
 };
 // use reqwest::{Client, IntoUrl, Url};
@@ -449,6 +451,46 @@ impl RpcClient {
             .chain_parameter
             .into_iter()
             .filter_map(|p| Some((p.key, p.value?)))
+            .collect())
+    }
+
+    /// Return all matched topics events
+    pub async fn check_for_events(
+        &self,
+        start_block: u64,
+        end_block: Option<u64>,
+        contract_address: Address,
+        selector: &str,
+    ) -> Result<Vec<EventData>, crate::Error> {
+        let method_name = &selector[..selector.find('(').unwrap_or(selector.len())];
+
+        let mut url = format!(
+            "/v1/contracts/{}/events?block_number={}&event_name={}&only_confirmed=true",
+            start_block,
+            contract_address.as_base58(),
+            method_name,
+        );
+
+        if let Some(end_block) = end_block {
+            let block = self.get_block(BlockBy::Number(end_block)).await?;
+            url = format!(
+                "{}&max_block_timestamp={}",
+                url, block.block_header.raw_data.timestamp
+            );
+        }
+
+        let res: EventsResult = self.api_get(&url).await?;
+
+        if !res.success {
+            return Err(crate::Error::ApiError(
+                res.error.unwrap_or("Api Error".to_string()),
+            ));
+        }
+
+        Ok(res
+            .data
+            .into_iter()
+            .filter(|e| extract_sig_from_event(&e.event).eq(selector))
             .collect())
     }
 }

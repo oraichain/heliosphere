@@ -1,6 +1,6 @@
 //! Utility functions
-use alloc::format;
 use alloc::string::String;
+use alloc::{format, vec::Vec};
 use core::fmt::{Display, LowerHex};
 use serde::{Deserialize, Deserializer, Serializer};
 
@@ -110,6 +110,16 @@ pub mod as_hex_address {
     }
 }
 
+/// extract function signature from event
+pub fn extract_sig_from_event(event: &str) -> String {
+    event
+        .split(", ")
+        .map(|part| part.splitn(2, " ").next().unwrap_or_default())
+        .collect::<Vec<&str>>()
+        .join(",")
+        + ")"
+}
+
 #[cfg(test)]
 mod test {
     use alloc::{vec, vec::Vec};
@@ -120,6 +130,16 @@ mod test {
     #[derive(Serialize, Deserialize)]
     #[repr(transparent)]
     struct Val(#[serde(with = "as_hex_number")] u64);
+
+    #[test]
+    fn extract_sig() {
+        let sig = extract_sig_from_event("ValsetUpdatedEvent(uint256 indexed _newValsetNonce, uint256 _eventNonce, uint256 _rewardAmount, address _rewardToken, address[] _validators, uint256[] _powers)");
+
+        assert_eq!(
+            sig,
+            "ValsetUpdatedEvent(uint256,uint256,uint256,address,address[],uint256[])"
+        );
+    }
 
     #[test]
     fn as_hex_number() {

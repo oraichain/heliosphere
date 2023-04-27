@@ -7,6 +7,7 @@ extern crate alloc;
 
 mod address;
 pub mod block;
+pub mod event;
 pub mod transaction;
 pub mod util;
 pub use address::Address;
