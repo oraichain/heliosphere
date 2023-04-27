@@ -65,7 +65,7 @@ pub struct BlockRawData {
     #[serde(with = "as_hex_buffer", rename = "parentHash")]
     pub parent_hash: Vec<u8>,
     /// Version
-    pub version: u32,
+    pub version: Option<u32>,
     /// Block timestamp
     pub timestamp: u64,
 }
