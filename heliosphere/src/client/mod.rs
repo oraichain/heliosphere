@@ -469,7 +469,7 @@ impl RpcClient {
         let block_header = self.get_block_header(BlockBy::Number(start_block)).await?;
 
         let mut url = format!(
-            "/v1/contracts/{}/events?event_name={}&only_confirmed=true&order_by=block_timestamp,asc&min_block_timestamp={}",
+            "/v1/contracts/{}/events?event_name={}&only_confirmed=true&order_by=block_timestamp,asc&limit=200&min_block_timestamp={}",
             contract_address.as_base58(),
             method_name,
             block_header.raw_data.timestamp
